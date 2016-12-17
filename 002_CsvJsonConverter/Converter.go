@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"io/ioutil"
 )
 
 func main() {
@@ -84,7 +85,22 @@ func csvToJson(f *os.File) (string, error) {
 
 // converter. from json to csv
 func jsonToCsv(f *os.File) (string, error) {
-    return "", nil
+	fileContent, e := ioutil.ReadAll(bufio.NewReader(f))
+
+	if e != nil {
+		return "", e
+	}
+
+	var records []Address
+	json.Unmarshal(fileContent, &records)
+
+	str := fmt.Sprintf("Street,City,Zip,State\n")
+	for i := 0; i < len(records); i++ {
+		r := records[i]
+		str += fmt.Sprintf("%s,%s,%s,%s\n", r.Street, r.City, r.Zip, r.State)
+	}
+
+    return str, nil
 }
 
 // valider of os args
