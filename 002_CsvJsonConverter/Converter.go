@@ -3,9 +3,9 @@ package main
 import (
 	"bufio"
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 )
 
 func main() {
@@ -25,7 +25,7 @@ func main() {
     switch os.Args[1] {
     case "-c":
         parseResult, err = csvToJson(file)
-    case "-t":
+    case "-j":
         parseResult, err = jsonToCsv(file)
     }
 
@@ -62,16 +62,24 @@ func csvToJson(f *os.File) (string, error) {
         return "", err
     }
 
-    recordFullLine := make([]string, 0)
-    for i := 1; i < len(cells); i++ {
-        recordSingleLine := make([]string, 0)
-        for j := 0; j < len(cells[i]); j++ {
-            recordSingleLine = append(recordSingleLine, fmt.Sprintf("\"%s\": \"%s\"", cells[0][j], cells[i][j]))
-        }
-        recordFullLine = append(recordFullLine, fmt.Sprintf("{%s}", strings.Join(recordSingleLine, ", ")))
-    }
+	// slice of record
+	records := make([]Address, 0)
+	for i := 1; i < len(cells); i++ {
+		r := Address {
+			Street: cells[i][0],
+			City: cells[i][1],
+			Zip: cells[i][2],
+			State: cells[i][3],
+		}
+		records = append(records, r)
+	}
 
-    return fmt.Sprintf("[%s]", strings.Join(recordFullLine, ", ")), nil
+	// Serialize
+	str, err := json.Marshal(records)
+	if err != nil {
+		return "", err
+	}
+	return string(str), nil
 }
 
 // converter. from json to csv
